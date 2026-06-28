@@ -902,20 +902,15 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
       }
       r.envitState = { kind: "pending", level: 2, calledBy: player, awaitingTeam: teamOf(player) === "nos" ? "ells" : "nos", prevAcceptedLevel: 0 };
       r.turn = nextRespondent(player);
-      // "Envit i truca": si el cantador és primer de la pareja i no hi
-      // ha truc diferit ja en joc, queda obligat a cantar truc després.
-      if (!r.deferredTruc && isFirstOfPair(player)) {
-        r.chainedTrucPending = player;
-      }
+      // Regla "envit i truca" eliminada: cantar envit ja no obliga ni
+      // permet trucar automàticament després de la resolució de l'envit.
       break;
     }
     case "renvit": {
       const prevLvl = r.envitState.kind === "pending" && typeof r.envitState.level === "number" ? r.envitState.level : 2;
       r.envitState = { kind: "pending", level: 4, calledBy: player, awaitingTeam: teamOf(player) === "nos" ? "ells" : "nos", prevAcceptedLevel: prevLvl };
       r.turn = nextRespondent(player);
-      if (!r.deferredTruc && isFirstOfPair(player)) {
-        r.chainedTrucPending = player;
-      }
+      // Sense encadenament automàtic de truc després de renvit.
       break;
     }
     case "falta-envit": {
@@ -937,9 +932,7 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
           : 0;
       r.envitState = { kind: "pending", level: "falta", calledBy: player, awaitingTeam: teamOf(player) === "nos" ? "ells" : "nos", prevAcceptedLevel: prevLvl };
       r.turn = nextRespondent(player);
-      if (!r.deferredTruc && isFirstOfPair(player)) {
-        r.chainedTrucPending = player;
-      }
+      // Sense encadenament automàtic de truc després de falta-envit.
       break;
     }
     case "vull": {
@@ -981,20 +974,9 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
           };
           r.turn = nextRespondent(r.deferredTruc.calledBy);
           r.deferredTruc = undefined;
-        } else if (r.chainedTrucPending !== undefined) {
-          // "Envit i truca": el cantador d'envit (primer de la pareja)
-          // truca automàticament en el moment que l'envit es resol.
-          const caller = r.chainedTrucPending;
-          r.log.push({ type: "shout", player: caller, what: "truc" });
-          r.trucState = {
-            kind: "pending",
-            level: 2,
-            calledBy: caller,
-            awaitingTeam: teamOf(caller) === "nos" ? "ells" : "nos",
-          };
-          r.turn = nextRespondent(caller);
-          r.chainedTrucPending = undefined;
         } else {
+          // L'envit s'ha resolt: torna el control al jugador que li toca
+          // segons l'ordre normal de la mesa. No es força cap truc.
           r.turn = whoseTurnAfterCall(r);
         }
       } else if (r.trucState.kind === "pending") {
@@ -1044,20 +1026,9 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
           };
           r.turn = nextRespondent(r.deferredTruc.calledBy);
           r.deferredTruc = undefined;
-        } else if (r.chainedTrucPending !== undefined) {
-          // "Envit i truca": el cantador d'envit truca automàticament
-          // encara que el rival haja dit "no vull" a l'envit.
-          const caller = r.chainedTrucPending;
-          r.log.push({ type: "shout", player: caller, what: "truc" });
-          r.trucState = {
-            kind: "pending",
-            level: 2,
-            calledBy: caller,
-            awaitingTeam: teamOf(caller) === "nos" ? "ells" : "nos",
-          };
-          r.turn = nextRespondent(caller);
-          r.chainedTrucPending = undefined;
         } else {
+          // Envit rebutjat: torna el torn al jugador que li toca segons
+          // l'ordre normal de la mesa. Sense truc automàtic.
           r.turn = whoseTurnAfterCall(r);
         }
       } else if (r.trucState.kind === "pending") {
