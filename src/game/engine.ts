@@ -991,6 +991,9 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
           };
           r.turn = nextRespondent(r.deferredTruc.calledBy);
           r.deferredTruc = undefined;
+        } else if (r.chainedTrucPending !== undefined) {
+          // "Envit i truca": torna el torn al jugador obligat perquè cante truc.
+          r.turn = r.chainedTrucPending;
         } else {
           // L'envit s'ha resolt: torna el control al jugador que li toca
           // segons l'ordre normal de la mesa. No es força cap truc.
@@ -1043,6 +1046,8 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
           };
           r.turn = nextRespondent(r.deferredTruc.calledBy);
           r.deferredTruc = undefined;
+        } else if (r.chainedTrucPending !== undefined) {
+          r.turn = r.chainedTrucPending;
         } else {
           // Envit rebutjat: torna el torn al jugador que li toca segons
           // l'ordre normal de la mesa. Sense truc automàtic.
