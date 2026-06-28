@@ -364,9 +364,12 @@ export function legalActions(m: MatchState, player: PlayerId): Action[] {
   const r = m.round;
   if (r.phase === "game-end" || r.phase === "round-end") return [];
 
-  // Regla eliminada: ja no obliguem ("envit i truca") a cantar truc
-  // automàticament després de resoldre's l'envit. El torn torna al jugador
-  // que li toca segons l'ordre normal de la mesa.
+  // Regla "envit i truca": si aquest jugador va envidar/falta-envidar
+  // com a primer de la pareja en el seu propi torn de joc (iniciativa),
+  // queda obligat a cantar truc abans de qualsevol altra acció.
+  if (r.chainedTrucPending === player) {
+    return [{ type: "shout", what: "truc" }];
+  }
 
   if (
     r.trucState.kind === "pending" &&
@@ -892,6 +895,12 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
       break;
     }
     case "envit": {
+      // Iniciativa = el jugador podia tirar carta i en lloc d'això envida
+      // en el seu propi torn, sense cap truc ni envit pendents.
+      const isInitiative =
+        r.trucState.kind === "none" &&
+        r.turn === player &&
+        r.tricks.length === 1;
       if (r.trucState.kind === "pending") {
         r.deferredTruc = {
           level: r.trucState.level,
@@ -902,8 +911,10 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
       }
       r.envitState = { kind: "pending", level: 2, calledBy: player, awaitingTeam: teamOf(player) === "nos" ? "ells" : "nos", prevAcceptedLevel: 0 };
       r.turn = nextRespondent(player);
-      // Regla "envit i truca" eliminada: cantar envit ja no obliga ni
-      // permet trucar automàticament després de la resolució de l'envit.
+      // "Envit i truca": només si és iniciativa del primer de la pareja.
+      if (isInitiative && isFirstOfPair(player)) {
+        r.chainedTrucPending = player;
+      }
       break;
     }
     case "renvit": {
@@ -914,6 +925,12 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
       break;
     }
     case "falta-envit": {
+      // Iniciativa: cap envit ni truc pendents i és el seu propi torn de joc.
+      const isInitiative =
+        r.envitState.kind === "none" &&
+        r.trucState.kind === "none" &&
+        r.turn === player &&
+        r.tricks.length === 1;
       if (r.trucState.kind === "pending") {
         r.deferredTruc = {
           level: r.trucState.level,
@@ -922,17 +939,17 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
         };
         r.trucState = { kind: "none", level: 0 };
       }
-      // Punts si el rival no vol la falta-envit:
-      // - falta directa (sense envit previ acceptat encara): 1 punt
-      // - falta després de envit (2): 2 punts
-      // - falta després de renvit (4): 4 punts
       const prevLvl: 0 | 2 | 4 =
         r.envitState.kind === "pending" && typeof r.envitState.level === "number"
           ? (r.envitState.level as 2 | 4)
           : 0;
       r.envitState = { kind: "pending", level: "falta", calledBy: player, awaitingTeam: teamOf(player) === "nos" ? "ells" : "nos", prevAcceptedLevel: prevLvl };
       r.turn = nextRespondent(player);
-      // Sense encadenament automàtic de truc després de falta-envit.
+      // "Envit i truca" només si és iniciativa del primer de la pareja.
+      // Si és resposta defensiva a un envit/renvit rival, NO encadena truc.
+      if (isInitiative && isFirstOfPair(player)) {
+        r.chainedTrucPending = player;
+      }
       break;
     }
     case "vull": {
@@ -974,6 +991,9 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
           };
           r.turn = nextRespondent(r.deferredTruc.calledBy);
           r.deferredTruc = undefined;
+        } else if (r.chainedTrucPending !== undefined) {
+          // "Envit i truca": torna el torn al jugador obligat perquè cante truc.
+          r.turn = r.chainedTrucPending;
         } else {
           // L'envit s'ha resolt: torna el control al jugador que li toca
           // segons l'ordre normal de la mesa. No es força cap truc.
@@ -1026,6 +1046,8 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
           };
           r.turn = nextRespondent(r.deferredTruc.calledBy);
           r.deferredTruc = undefined;
+        } else if (r.chainedTrucPending !== undefined) {
+          r.turn = r.chainedTrucPending;
         } else {
           // Envit rebutjat: torna el torn al jugador que li toca segons
           // l'ordre normal de la mesa. Sense truc automàtic.
