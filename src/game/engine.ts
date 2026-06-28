@@ -364,19 +364,9 @@ export function legalActions(m: MatchState, player: PlayerId): Action[] {
   const r = m.round;
   if (r.phase === "game-end" || r.phase === "round-end") return [];
 
-  // Obligació encadenada "Envit i truca": si aquest jugador té pendent
-  // l'auto-truc i l'envit ja s'ha resolt, només pot cantar truc — cap
-  // altra acció (jugar carta, altres crits) és legal.
-  if (
-    r.chainedTrucPending === player &&
-    r.envitState.kind !== "pending" &&
-    r.trucState.kind !== "pending"
-  ) {
-    if (r.turn === player) {
-      return [{ type: "shout", what: "truc" }];
-    }
-    return [];
-  }
+  // Regla eliminada: ja no obliguem ("envit i truca") a cantar truc
+  // automàticament després de resoldre's l'envit. El torn torna al jugador
+  // que li toca segons l'ordre normal de la mesa.
 
   if (
     r.trucState.kind === "pending" &&
