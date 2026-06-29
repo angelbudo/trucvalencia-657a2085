@@ -1314,9 +1314,10 @@ async function persistModerationFlags(args: {
  * Replica `currentActor` del frontend. Prioriza pendientes de envit/truc
  * por equipo, y cae al `round.turn` para la fase de play.
  */
-function currentActor(state: MatchState): PlayerId | null {
+function currentActor(state: MatchState, seatKinds?: SeatKind[]): PlayerId | null {
   const r = state.round;
   if (r.phase === "game-end" || r.phase === "round-end") return null;
+  const candidates: PlayerId[] = [];
   for (const p of [0, 1, 2, 3] as PlayerId[]) {
     if (legalActions(state, p).length === 0) continue;
     const team = p % 2 === 0 ? "nos" : "ells";
@@ -1325,10 +1326,19 @@ function currentActor(state: MatchState): PlayerId | null {
       (r.trucState.kind === "pending" && r.trucState.awaitingTeam === team) ||
       r.turn === p
     ) {
-      return p;
+      candidates.push(p);
     }
   }
-  return null;
+  if (candidates.length === 0) return null;
+  // Quan hi ha un envit/truc pendent, els dos companys poden votar de
+  // manera independent. Per al motor de bots, prioritzem el company que
+  // siga bot perquè decidisca pel seu compte; per a humans, qualsevol
+  // dels dos pot enviar primer (submitAction ja no força un únic actor).
+  if (seatKinds) {
+    const bot = candidates.find((p) => seatKinds[p] === "bot");
+    if (bot !== undefined) return bot;
+  }
+  return candidates[0];
 }
 
 /**
@@ -1471,7 +1481,7 @@ function stepOneBotAction(state: MatchState, seatKinds: SeatKind[]): BotStepResu
     return { state, chats: [], changed: false, nextInMs: srv.nextBotAt - t };
   }
 
-  const actor = currentActor(state);
+  const actor = currentActor(state, seatKinds);
   if (actor == null) return { state, chats: [], changed: false };
   const isBotActor = seatKinds[actor] === "bot" || !!srv.afkAutoPilot?.[actor];
   if (!isBotActor) {
@@ -1626,9 +1636,13 @@ async function submitAction(input: z.infer<typeof SubmitActionSchema>) {
   const player = seat as PlayerId;
 
   let state = room.match_state as MatchState;
-  const actor = currentActor(state);
-  if (actor == null) return { ok: false, stale: true } as const;
-  if (actor !== player) return { ok: false, stale: true } as const;
+  // Nota: NO bloqueem per `currentActor` perquè la regla d'envit/truc
+  // permet als dos membres de la pareja respondre de forma independent
+  // i simultània (un "Vull" tanca; cal el "No vull" dels dos per rebutjar).
+  // La validació real es fa via `legalActions(state, player)` més avall.
+  if (legalActions(state, player).length === 0) {
+    return { ok: false, stale: true } as const;
+  }
 
   const legals = legalActions(state, player);
   const action = input.action as unknown as Action;
