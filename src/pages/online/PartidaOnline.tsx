@@ -1090,6 +1090,13 @@ function PartidaOnline() {
         onDealKeyConsumed={handleDealKeyConsumed}
         onDealAnimationEnd={handleDealAnimationEnd}
         onTransitionActiveChange={setTransitionActive}
+        debugFetchAllHands={async () => {
+          try {
+            const res = await getAllHandsDebug({ data: { code } });
+            return res?.hands ?? null;
+          } catch { return null; }
+        }}
+        
         
         belowHandSlot={
           <TableChat
