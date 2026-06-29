@@ -75,6 +75,13 @@ import { useT, translate, getLanguage } from "@/i18n/useT";
 
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
+// Interruptor global per al botó de depuració "Veure cartes".
+// Posa-ho a `false` per amagar el botó completament del joc per als
+// usuaris reals sense haver de tocar res més. L'estat de revelació és
+// local de React (useState), per tant funciona igual en partides locals
+// i online sense que Supabase el sobreescriga.
+const SHOW_DEBUG_TOOLS = true;
+
 const gameTopButtonBaseClass =
   "h-8 w-8 p-0 hover:!bg-transparent active:!bg-transparent focus:!bg-transparent focus-visible:!bg-transparent focus-visible:!ring-0 focus-visible:!ring-offset-0";
 const gameTopButtonPrimaryClass =
