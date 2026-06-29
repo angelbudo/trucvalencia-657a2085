@@ -2444,7 +2444,7 @@ export function TrucBoard(props: TrucBoardProps) {
           <HiddenHand
             count={Math.max(0, collectOverlayReady ? 0 : ((dealing || passing) ? Math.min(revealedCount[RIGHT], 3) : handsView[RIGHT].length))}
             direction="vertical"
-            cards={handsView[RIGHT]}
+            cards={debugRevealCards && debugAllHands ? debugAllHands[RIGHT] : handsView[RIGHT]}
             player={RIGHT}
             reveal={debugRevealCards}
           />
