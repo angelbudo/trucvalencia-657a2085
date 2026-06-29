@@ -91,9 +91,11 @@ function maskMatchStateForSeat(state: MatchState, mySeat: PlayerId | null, prev:
     } else {
       masked[p] = Array.from({ length: len }, (_, i) => ({
         id: `hidden-${p}-${i}`,
-        suit: "oros" as const,
-        rank: 1 as const,
-      }));
+        // No real suit/rank: rendering layers detect `hidden` and show the
+        // card back. Anything that previously fell back to As d'oros must
+        // honor this flag instead of inventing a card.
+        hidden: true,
+      })) as never;
       handsChanged = true;
     }
   }

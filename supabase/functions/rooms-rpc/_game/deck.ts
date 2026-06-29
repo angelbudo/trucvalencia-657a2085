@@ -3,6 +3,15 @@ import type { Card, PlayerId, Rank, Suit } from "./types.ts";
 export const SUITS: Suit[] = ["oros", "copes", "espases", "bastos"];
 export const RANKS: Rank[] = [1, 3, 4, 5, 6, 7];
 
+/** Vegeu `src/game/deck.ts` — paritat literal client/servidor. */
+export function isRealCard(c: unknown): c is Card {
+  if (!c || typeof c !== "object") return false;
+  const obj = c as { suit?: unknown; rank?: unknown; hidden?: unknown; id?: unknown };
+  if (obj.hidden === true) return false;
+  if (typeof obj.id === "string" && obj.id.startsWith("hidden-")) return false;
+  return typeof obj.suit === "string" && typeof obj.rank === "number";
+}
+
 export function buildDeck(): Card[] {
   const deck: Card[] = [];
   for (const suit of SUITS) {
@@ -47,12 +56,13 @@ export function playerTotalEnvit(
   round: { hands: Record<PlayerId, Card[]>; tricks: { cards: { player: PlayerId; card: Card; covered?: boolean }[] }[] },
   player: PlayerId,
 ): number {
-  const hand = round.hands[player] ?? [];
+  const hand = (round.hands[player] ?? []).filter(isRealCard);
   // Covered cards (played face-down voluntarily) are excluded from envit.
   const played: Card[] = round.tricks
     .flatMap((t) => t.cards)
     .filter((tc) => tc.player === player && !tc.covered)
-    .map((tc) => tc.card);
+    .map((tc) => tc.card)
+    .filter(isRealCard);
   return bestEnvit([...hand, ...played]);
 }
 
@@ -128,12 +138,13 @@ export function playerEnvitBreakdown(
   round: { hands: Record<PlayerId, Card[]>; tricks: { cards: { player: PlayerId; card: Card; covered?: boolean }[] }[] },
   player: PlayerId,
 ): { value: number; cards: Card[]; playedIds: Set<string> } {
-  const hand = round.hands[player] ?? [];
+  const hand = (round.hands[player] ?? []).filter(isRealCard);
   // Covered cards (played face-down voluntarily) are excluded from envit calculation.
   const uncoveredPlayed: Card[] = round.tricks
     .flatMap((t) => t.cards)
     .filter((tc) => tc.player === player && !tc.covered)
-    .map((tc) => tc.card);
+    .map((tc) => tc.card)
+    .filter(isRealCard);
   // playedIds: uncovered played cards animate from the table position
   const playedIds = new Set(uncoveredPlayed.map((c) => c.id));
   const result = bestEnvitCards([...hand, ...uncoveredPlayed]);

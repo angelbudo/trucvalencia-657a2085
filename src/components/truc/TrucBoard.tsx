@@ -2900,7 +2900,13 @@ function HiddenHand({
     <div className={cn(isVertical ? "flex flex-col -space-y-9" : "flex -space-x-4")}>
       {Array.from({ length: count }).map((_, i) => {
         const c = cards?.[i];
-        const showFace = reveal && !!c;
+        // Una carta està "amagada" quan ve marcada amb el flag explícit
+        // `hidden: true` (mans dels rivals en mode online). Mai no inventem
+        // un suit/rank per fallback: si no tenim dades reals, la carta queda
+        // boca avall encara que el botó de debug estiga actiu.
+        const isHidden = !!(c && (c as { hidden?: boolean }).hidden);
+        const hasRealFace = !!c && !isHidden && !!(c as { suit?: unknown }).suit && !!(c as { rank?: unknown }).rank;
+        const showFace = reveal && hasRealFace;
         const collectAttrs = c
           ? {
               "data-collect-id": c.id,
