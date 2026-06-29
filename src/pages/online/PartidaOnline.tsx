@@ -1093,7 +1093,7 @@ function PartidaOnline() {
         debugFetchAllHands={async () => {
           try {
             const res = await getAllHandsDebug({ data: { code } });
-            return res?.hands ?? null;
+            return (res?.hands ?? null) as unknown as Record<PlayerId, Array<{ id: string; suit: import("@/game/types").Suit; rank: import("@/game/types").Rank }>> | null;
           } catch { return null; }
         }}
         
