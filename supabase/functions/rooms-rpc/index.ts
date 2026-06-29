@@ -1481,7 +1481,7 @@ function stepOneBotAction(state: MatchState, seatKinds: SeatKind[]): BotStepResu
     return { state, chats: [], changed: false, nextInMs: srv.nextBotAt - t };
   }
 
-  const actor = currentActor(state);
+  const actor = currentActor(state, seatKinds);
   if (actor == null) return { state, chats: [], changed: false };
   const isBotActor = seatKinds[actor] === "bot" || !!srv.afkAutoPilot?.[actor];
   if (!isBotActor) {
