@@ -384,6 +384,27 @@ export function TrucBoard(props: TrucBoardProps) {
   // les mans dels altres jugadors es mostren boca amunt SENSE alterar l'estat
   // de la partida ni canviar el valor / palo / assignació de les cartes.
   const [debugRevealCards, setDebugRevealCards] = useState(false);
+  // Cache de cartes reals obtingudes des del servidor quan el debug està
+  // actiu en mode online. En mode local és sempre null perquè `handsView` ja
+  // conté les cartes reals.
+  const [debugAllHands, setDebugAllHands] = useState<Record<PlayerId, Array<{ id: string; suit: import("@/game/types").Suit; rank: import("@/game/types").Rank }>> | null>(null);
+  const debugFetchAllHands = props.debugFetchAllHands;
+  useEffect(() => {
+    if (!debugRevealCards || !debugFetchAllHands) {
+      setDebugAllHands(null);
+      return;
+    }
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const res = await debugFetchAllHands();
+        if (!cancelled && res) setDebugAllHands(res);
+      } catch { /* swallow: debug-only */ }
+    };
+    refresh();
+    const id = setInterval(refresh, 1500);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [debugRevealCards, debugFetchAllHands, match.round]);
   const [displayedScores, setDisplayedScores] = useState(() => ({
     nos: { ...match.scores.nos },
     ells: { ...match.scores.ells },
