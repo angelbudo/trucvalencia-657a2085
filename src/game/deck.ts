@@ -145,12 +145,16 @@ export function playerEnvitBreakdown(
   round: { hands: Record<PlayerId, Card[]>; tricks: { cards: { player: PlayerId; card: Card; covered?: boolean }[] }[] },
   player: PlayerId,
 ): { value: number; cards: Card[]; playedIds: Set<string> } {
-  const hand = round.hands[player] ?? [];
+  // Filtrem placeholders amagats per a no inventar cap carta (mai
+  // assumim un As d'oros fictici si el backend ens ha enviat la mà
+  // emmascarada per privacitat).
+  const hand = (round.hands[player] ?? []).filter(isRealCard);
   // Covered cards (played face-down voluntarily) are excluded from envit calculation.
   const uncoveredPlayed: Card[] = round.tricks
     .flatMap((t) => t.cards)
     .filter((tc) => tc.player === player && !tc.covered)
-    .map((tc) => tc.card);
+    .map((tc) => tc.card)
+    .filter(isRealCard);
   // playedIds: uncovered played cards animate from the table position
   const playedIds = new Set(uncoveredPlayed.map((c) => c.id));
   const result = bestEnvitCards([...hand, ...uncoveredPlayed]);
