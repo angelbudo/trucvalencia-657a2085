@@ -1626,9 +1626,13 @@ async function submitAction(input: z.infer<typeof SubmitActionSchema>) {
   const player = seat as PlayerId;
 
   let state = room.match_state as MatchState;
-  const actor = currentActor(state);
-  if (actor == null) return { ok: false, stale: true } as const;
-  if (actor !== player) return { ok: false, stale: true } as const;
+  // Nota: NO bloqueem per `currentActor` perquè la regla d'envit/truc
+  // permet als dos membres de la pareja respondre de forma independent
+  // i simultània (un "Vull" tanca; cal el "No vull" dels dos per rebutjar).
+  // La validació real es fa via `legalActions(state, player)` més avall.
+  if (legalActions(state, player).length === 0) {
+    return { ok: false, stale: true } as const;
+  }
 
   const legals = legalActions(state, player);
   const action = input.action as unknown as Action;
