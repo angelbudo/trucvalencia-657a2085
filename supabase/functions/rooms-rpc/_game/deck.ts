@@ -3,6 +3,15 @@ import type { Card, PlayerId, Rank, Suit } from "./types.ts";
 export const SUITS: Suit[] = ["oros", "copes", "espases", "bastos"];
 export const RANKS: Rank[] = [1, 3, 4, 5, 6, 7];
 
+/** Vegeu `src/game/deck.ts` — paritat literal client/servidor. */
+export function isRealCard(c: unknown): c is Card {
+  if (!c || typeof c !== "object") return false;
+  const obj = c as { suit?: unknown; rank?: unknown; hidden?: unknown; id?: unknown };
+  if (obj.hidden === true) return false;
+  if (typeof obj.id === "string" && obj.id.startsWith("hidden-")) return false;
+  return typeof obj.suit === "string" && typeof obj.rank === "number";
+}
+
 export function buildDeck(): Card[] {
   const deck: Card[] = [];
   for (const suit of SUITS) {
