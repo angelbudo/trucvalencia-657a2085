@@ -483,6 +483,23 @@ async function getMyHand(input: z.infer<typeof GetMyHandSchema>) {
   return { hand: (hands[seat] ?? []) as unknown[], seat };
 }
 
+// DEBUG RPC: devuelve TODAS las manos de la mesa. Pensat només per al
+// botó "Veure cartes" del client (gated per SHOW_DEBUG_TOOLS al frontend).
+// No exposa cap dada sensible més enllà del que mostraria el client de
+// depuració, però evidentment trenca la privadesa entre jugadors: cal
+// desactivar la constant `SHOW_DEBUG_TOOLS` (i, idealment, esborrar
+// aquest handler) abans d'obrir el joc al públic real.
+const GetAllHandsDebugSchema = z.object({
+  code: z.string().min(6).max(6),
+});
+async function getAllHandsDebug(input: z.infer<typeof GetAllHandsDebugSchema>) {
+  const room = await fetchRoomByCode(input.code.toUpperCase());
+  if (!room) throw new Error("room_not_found");
+  if (!room.match_state) return { hands: { 0: [], 1: [], 2: [], 3: [] } };
+  const hands = (room.match_state as MatchState).round?.hands ?? { 0: [], 1: [], 2: [], 3: [] };
+  return { hands };
+}
+
 // TTL d'inactivitat: si tots els humans d'una mesa fa més de STALE_ROOM_MS
 // que no envien heartbeat (i la mesa no s'ha tocat tampoc), la considerem
 // abandonada i la destruïm. Cobreix els casos en què el client no pot
@@ -2086,6 +2103,7 @@ const handlers: Record<string, Handler> = {
   joinAsSpectator: withSchema(JoinSpectatorSchema, joinAsSpectator),
   getRoom: withSchema(GetRoomSchema, getRoom),
   getMyHand: withSchema(GetMyHandSchema, getMyHand),
+  getAllHandsDebug: withSchema(GetAllHandsDebugSchema, getAllHandsDebug),
   listLobbyRooms: listLobbyRooms as Handler,
   listMyActiveRooms: withSchema(ListMyActiveSchema, listMyActiveRooms),
   heartbeat: withSchema(HeartbeatSchema, heartbeat),

@@ -285,6 +285,12 @@ export interface TrucBoardProps {
   /** True si el visor és l'últim humà a la taula (els altres seients són
    *  bots o estan buits). Modifica el text del diàleg d'abandonar. */
   lastHumanInRoom?: boolean;
+  /** Callback opcional (mode online) per obtenir TOTES les mans reals quan
+   *  s'activa el botó de debug "Veure cartes". El TrucBoard l'invoca cada
+   *  vegada que es polsa el toggle i refresca periòdicament mentre està
+   *  actiu. En mode local, on `handsView` ja conté les cartes reals, no cal
+   *  passar-lo. */
+  debugFetchAllHands?: () => Promise<Record<PlayerId, Array<{ id: string; suit: import("@/game/types").Suit; rank: import("@/game/types").Rank }>> | null>;
 }
 
 /**
@@ -378,6 +384,27 @@ export function TrucBoard(props: TrucBoardProps) {
   // les mans dels altres jugadors es mostren boca amunt SENSE alterar l'estat
   // de la partida ni canviar el valor / palo / assignació de les cartes.
   const [debugRevealCards, setDebugRevealCards] = useState(false);
+  // Cache de cartes reals obtingudes des del servidor quan el debug està
+  // actiu en mode online. En mode local és sempre null perquè `handsView` ja
+  // conté les cartes reals.
+  const [debugAllHands, setDebugAllHands] = useState<Record<PlayerId, Array<{ id: string; suit: import("@/game/types").Suit; rank: import("@/game/types").Rank }>> | null>(null);
+  const debugFetchAllHands = props.debugFetchAllHands;
+  useEffect(() => {
+    if (!debugRevealCards || !debugFetchAllHands) {
+      setDebugAllHands(null);
+      return;
+    }
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const res = await debugFetchAllHands();
+        if (!cancelled && res) setDebugAllHands(res);
+      } catch { /* swallow: debug-only */ }
+    };
+    refresh();
+    const id = setInterval(refresh, 1500);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [debugRevealCards, debugFetchAllHands, match.round]);
   const [displayedScores, setDisplayedScores] = useState(() => ({
     nos: { ...match.scores.nos },
     ells: { ...match.scores.ells },
@@ -2237,7 +2264,7 @@ export function TrucBoard(props: TrucBoardProps) {
         <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ top: "25px" }} data-deck-anchor={PARTNER}>
           <HiddenHand
             count={Math.max(0, collectOverlayReady ? 0 : ((dealing || passing) ? Math.min(revealedCount[PARTNER], 3) : handsView[PARTNER].length))}
-            cards={handsView[PARTNER]}
+            cards={debugRevealCards && debugAllHands ? debugAllHands[PARTNER] : handsView[PARTNER]}
             player={PARTNER}
             reveal={debugRevealCards}
           />
@@ -2301,7 +2328,7 @@ export function TrucBoard(props: TrucBoardProps) {
           <HiddenHand
             count={Math.max(0, collectOverlayReady ? 0 : ((dealing || passing) ? Math.min(revealedCount[LEFT], 3) : handsView[LEFT].length))}
             direction="vertical"
-            cards={handsView[LEFT]}
+            cards={debugRevealCards && debugAllHands ? debugAllHands[LEFT] : handsView[LEFT]}
             player={LEFT}
             reveal={debugRevealCards}
           />
@@ -2417,7 +2444,7 @@ export function TrucBoard(props: TrucBoardProps) {
           <HiddenHand
             count={Math.max(0, collectOverlayReady ? 0 : ((dealing || passing) ? Math.min(revealedCount[RIGHT], 3) : handsView[RIGHT].length))}
             direction="vertical"
-            cards={handsView[RIGHT]}
+            cards={debugRevealCards && debugAllHands ? debugAllHands[RIGHT] : handsView[RIGHT]}
             player={RIGHT}
             reveal={debugRevealCards}
           />

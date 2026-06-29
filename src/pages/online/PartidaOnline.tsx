@@ -4,7 +4,7 @@ import { ClientOnly } from "@/components/ClientOnly";
 import { Button } from "@/components/ui/button";
 import { usePlayerIdentity } from "@/hooks/usePlayerIdentity";
 import { useRoomRealtime, type RoomFullDTO } from "@/online/useRoomRealtime";
-import { submitAction, sendChatPhrase, sendTextMessage, setPaused, advanceBots, markActivity, proposeAction, respondProposal, cancelProposal, flagPlayerInChat, leaveRoom, rematchStay } from "@/online/rooms.functions";
+import { submitAction, sendChatPhrase, sendTextMessage, setPaused, advanceBots, markActivity, proposeAction, respondProposal, cancelProposal, flagPlayerInChat, leaveRoom, rematchStay, getAllHandsDebug } from "@/online/rooms.functions";
 import { useRoomChat } from "@/online/useRoomChat";
 import { filterProfanity, loadBlacklistFromSupabase } from "@/online/profanityFilter";
 import { useRoomTextChat } from "@/online/useRoomTextChat";
@@ -1090,6 +1090,13 @@ function PartidaOnline() {
         onDealKeyConsumed={handleDealKeyConsumed}
         onDealAnimationEnd={handleDealAnimationEnd}
         onTransitionActiveChange={setTransitionActive}
+        debugFetchAllHands={async () => {
+          try {
+            const res = await getAllHandsDebug({ data: { code } });
+            return (res?.hands ?? null) as unknown as Record<PlayerId, Array<{ id: string; suit: import("@/game/types").Suit; rank: import("@/game/types").Rank }>> | null;
+          } catch { return null; }
+        }}
+        
         
         belowHandSlot={
           <TableChat
