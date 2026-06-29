@@ -308,6 +308,13 @@ export interface GetMyHandResult {
 export const getMyHand = ({ data }: { data: GetMyHandInput }) =>
   rpc<GetMyHandResult>("getMyHand", data);
 
+export interface GetAllHandsDebugInput { code: string }
+export interface GetAllHandsDebugResult {
+  hands: Record<PlayerId, Array<{ id: string; suit: string; rank: number }>>;
+}
+export const getAllHandsDebug = ({ data }: { data: GetAllHandsDebugInput }) =>
+  rpc<GetAllHandsDebugResult>("getAllHandsDebug", data);
+
 export interface StartMatchInput {
   roomId: string;
   deviceId: string;
