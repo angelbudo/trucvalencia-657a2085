@@ -2103,6 +2103,7 @@ const handlers: Record<string, Handler> = {
   joinAsSpectator: withSchema(JoinSpectatorSchema, joinAsSpectator),
   getRoom: withSchema(GetRoomSchema, getRoom),
   getMyHand: withSchema(GetMyHandSchema, getMyHand),
+  getAllHandsDebug: withSchema(GetAllHandsDebugSchema, getAllHandsDebug),
   listLobbyRooms: listLobbyRooms as Handler,
   listMyActiveRooms: withSchema(ListMyActiveSchema, listMyActiveRooms),
   heartbeat: withSchema(HeartbeatSchema, heartbeat),
