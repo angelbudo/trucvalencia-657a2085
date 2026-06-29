@@ -1314,9 +1314,10 @@ async function persistModerationFlags(args: {
  * Replica `currentActor` del frontend. Prioriza pendientes de envit/truc
  * por equipo, y cae al `round.turn` para la fase de play.
  */
-function currentActor(state: MatchState): PlayerId | null {
+function currentActor(state: MatchState, seatKinds?: SeatKind[]): PlayerId | null {
   const r = state.round;
   if (r.phase === "game-end" || r.phase === "round-end") return null;
+  const candidates: PlayerId[] = [];
   for (const p of [0, 1, 2, 3] as PlayerId[]) {
     if (legalActions(state, p).length === 0) continue;
     const team = p % 2 === 0 ? "nos" : "ells";
@@ -1325,10 +1326,19 @@ function currentActor(state: MatchState): PlayerId | null {
       (r.trucState.kind === "pending" && r.trucState.awaitingTeam === team) ||
       r.turn === p
     ) {
-      return p;
+      candidates.push(p);
     }
   }
-  return null;
+  if (candidates.length === 0) return null;
+  // Quan hi ha un envit/truc pendent, els dos companys poden votar de
+  // manera independent. Per al motor de bots, prioritzem el company que
+  // siga bot perquè decidisca pel seu compte; per a humans, qualsevol
+  // dels dos pot enviar primer (submitAction ja no força un únic actor).
+  if (seatKinds) {
+    const bot = candidates.find((p) => seatKinds[p] === "bot");
+    if (bot !== undefined) return bot;
+  }
+  return candidates[0];
 }
 
 /**
