@@ -285,6 +285,12 @@ export interface TrucBoardProps {
   /** True si el visor és l'últim humà a la taula (els altres seients són
    *  bots o estan buits). Modifica el text del diàleg d'abandonar. */
   lastHumanInRoom?: boolean;
+  /** Callback opcional (mode online) per obtenir TOTES les mans reals quan
+   *  s'activa el botó de debug "Veure cartes". El TrucBoard l'invoca cada
+   *  vegada que es polsa el toggle i refresca periòdicament mentre està
+   *  actiu. En mode local, on `handsView` ja conté les cartes reals, no cal
+   *  passar-lo. */
+  debugFetchAllHands?: () => Promise<Record<PlayerId, Array<{ id: string; suit: import("@/game/types").Suit; rank: import("@/game/types").Rank }>> | null>;
 }
 
 /**
