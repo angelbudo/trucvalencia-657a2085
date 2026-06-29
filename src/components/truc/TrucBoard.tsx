@@ -1993,16 +1993,19 @@ export function TrucBoard(props: TrucBoardProps) {
     <main ref={boardRootRef} data-paused={paused ? "true" : undefined} className="min-h-screen flex flex-col relative pt-5">
       {/* DEBUG: botó flotant (només visual) per veure les cartes dels altres jugadors.
           Posicionat fixed: no ocupa espai al DOM ni desplaça cap element del tauler.
-          A la mateixa alçada que el botó de xat (top-[54px]) però a l'esquerra. */}
-      <button
-        type="button"
-        onClick={() => setDebugRevealCards((v) => !v)}
-        className="fixed left-4 top-[104px] z-[55] h-12 w-12 rounded-full bg-black/40 hover:bg-black/60 text-white/90 shadow-lg backdrop-blur-sm flex items-center justify-center transition-colors"
-        aria-label={debugRevealCards ? "Amagar cartes (debug)" : "Veure cartes (debug)"}
-        title={debugRevealCards ? "Amagar cartes (debug)" : "Veure cartes (debug)"}
-      >
-        {debugRevealCards ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-      </button>
+          A la mateixa alçada que el botó de xat (top-[54px]) però a l'esquerra.
+          Es renderitza només si SHOW_DEBUG_TOOLS és true. */}
+      {SHOW_DEBUG_TOOLS && (
+        <button
+          type="button"
+          onClick={() => setDebugRevealCards((v) => !v)}
+          className="fixed left-4 top-[104px] z-[55] h-12 w-12 rounded-full bg-black/40 hover:bg-black/60 text-white/90 shadow-lg backdrop-blur-sm flex items-center justify-center transition-colors"
+          aria-label={debugRevealCards ? "Amagar cartes (debug)" : "Veure cartes (debug)"}
+          title={debugRevealCards ? "Amagar cartes (debug)" : "Veure cartes (debug)"}
+        >
+          {debugRevealCards ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+        </button>
+      )}
       {paused && (
         <div className="fixed inset-0 bg-background/70 backdrop-blur-sm flex flex-col items-center justify-center gap-4 pointer-events-auto" style={{ zIndex: TRUC_Z_INDEX.pauseOverlay }}>
           <Pause className="w-16 h-16 text-primary" />
