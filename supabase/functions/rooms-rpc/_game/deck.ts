@@ -56,12 +56,13 @@ export function playerTotalEnvit(
   round: { hands: Record<PlayerId, Card[]>; tricks: { cards: { player: PlayerId; card: Card; covered?: boolean }[] }[] },
   player: PlayerId,
 ): number {
-  const hand = round.hands[player] ?? [];
+  const hand = (round.hands[player] ?? []).filter(isRealCard);
   // Covered cards (played face-down voluntarily) are excluded from envit.
   const played: Card[] = round.tricks
     .flatMap((t) => t.cards)
     .filter((tc) => tc.player === player && !tc.covered)
-    .map((tc) => tc.card);
+    .map((tc) => tc.card)
+    .filter(isRealCard);
   return bestEnvit([...hand, ...played]);
 }
 
