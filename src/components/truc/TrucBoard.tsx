@@ -2264,7 +2264,7 @@ export function TrucBoard(props: TrucBoardProps) {
         <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ top: "25px" }} data-deck-anchor={PARTNER}>
           <HiddenHand
             count={Math.max(0, collectOverlayReady ? 0 : ((dealing || passing) ? Math.min(revealedCount[PARTNER], 3) : handsView[PARTNER].length))}
-            cards={handsView[PARTNER]}
+            cards={debugRevealCards && debugAllHands ? debugAllHands[PARTNER] : handsView[PARTNER]}
             player={PARTNER}
             reveal={debugRevealCards}
           />
