@@ -123,11 +123,16 @@ export function PlayerSeat({
           title={t("friends.is_friend") || "Amic"}
         />
       )}
-      {isPendingResponder && (
+      {(isPendingResponder || (
+        isTurn &&
+        match.round.phase === "playing" &&
+        match.round.envitState.kind !== "pending" &&
+        match.round.trucState.kind !== "pending"
+      )) && (
         <div
           className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md animate-bounce z-20"
-          title="Pendent de respondre"
-          aria-label="Pendent de respondre"
+          title={isPendingResponder ? "Pendent de respondre" : "El seu torn"}
+          aria-label={isPendingResponder ? "Pendent de respondre" : "El seu torn"}
         >
           <HelpCircle className="w-4 h-4" strokeWidth={2.5} />
         </div>
