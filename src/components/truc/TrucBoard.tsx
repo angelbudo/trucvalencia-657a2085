@@ -509,14 +509,39 @@ export function TrucBoard(props: TrucBoardProps) {
       let changed = false;
       const next = { ...prev };
       for (const f of list) {
-        if ((f.what === "vull" || f.what === "no-vull") && f.player !== undefined && next[f.player]) {
-          next[f.player] = false;
-          changed = true;
+        if (f.player === undefined) continue;
+        if (f.what === "vull") {
+          // Un "Vull" accepta per a tota la parella: traiem l'interrogant
+          // a tots els membres de l'equip alhora i exactament en l'instant
+          // en què apareix el bocadillo central.
+          const team = teamOf(f.player);
+          ([0, 1, 2, 3] as PlayerId[]).forEach((p) => {
+            if (teamOf(p) === team && next[p]) {
+              next[p] = false;
+              changed = true;
+            }
+          });
+        } else if (f.what === "no-vull") {
+          if (next[f.player]) {
+            next[f.player] = false;
+            changed = true;
+          }
+          // Si l'engine ja no està pendent, el rebuig de la parella és
+          // definitiu: també traiem l'interrogant al company.
+          if (r.envitState.kind !== "pending" && r.trucState.kind !== "pending") {
+            const team = teamOf(f.player);
+            ([0, 1, 2, 3] as PlayerId[]).forEach((p) => {
+              if (teamOf(p) === team && next[p]) {
+                next[p] = false;
+                changed = true;
+              }
+            });
+          }
         }
       }
       return changed ? next : prev;
     });
-  }, [shoutFlash, shoutFlashes]);
+  }, [shoutFlash, shoutFlashes, r.envitState, r.trucState]);
 
   useEffect(() => {
     const currentTrick = r.tricks[r.tricks.length - 1];
