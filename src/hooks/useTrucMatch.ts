@@ -735,17 +735,15 @@ export function useTrucMatch(options: UseTrucMatchOptions = {}) {
     // colar-se i avançar l'estat.
     if (isEngineLocked()) return;
     if (player !== HUMAN && action.type === "play-card" && isBotPlayBlockedByPartnerConsult(player)) return;
-    // Regla universal entre cartes: bloqueja qualsevol play-card mentre
-    // dure el freeze (1 s normal, 2 s en final de baza). L'humà queda
-    // bloquejat silenciosament; per al bot, reprogramem la mateixa acció
-    // perquè l'scheduler no la perdi.
-    if (action.type === "play-card") {
+    // Regla entre cartes: bloqueja play-card del BOT mentre dure el
+    // freeze (1 s normal, 2 s en final de baza) reprogramant l'acció
+    // perquè l'scheduler no la perdi. L'HUMÀ no té cap delay: si fa
+    // clic, la carta es tira immediatament.
+    if (action.type === "play-card" && player !== HUMAN) {
       const remaining = remainingCardFreezeMs();
       if (remaining > 0) {
-        if (player !== HUMAN) {
-          const wait = remaining + 16;
-          window.setTimeout(() => dispatch(player, action), wait);
-        }
+        const wait = remaining + 16;
+        window.setTimeout(() => dispatch(player, action), wait);
         return;
       }
     }
