@@ -23,8 +23,11 @@ export const CONSULT_ANSWER_DELAY_MS = 2000;
 /** Answer delay used when both ends are bots: també 2 s exactes. */
 export const CONSULT_BOT_ANSWER_DELAY_MS = 2000;
 
-/** Delay before acting on a completed consult: immediate once the answer is processed. */
-export const CONSULT_DECIDE_DELAY_MS = 0;
+/** Delay before acting on a completed consult. Mínim 1 s de "reflexió"
+ *  després que el company haja respost, per a que el bocadillo de la
+ *  resposta siga clarament visible abans que el bot tire la carta o
+ *  execute la seua acció final. */
+export const CONSULT_DECIDE_DELAY_MS = 1000;
 
 // -----------------------------------------------------------------------------
 // Bubble visual durations
