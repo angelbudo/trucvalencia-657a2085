@@ -933,11 +933,17 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
       break;
     }
     case "falta-envit": {
+      // Iniciativa estricta: torn net a la primera baza, sense envit
+      // pendent (respostes NO compten) ni truc ni envit ja resolt, i
+      // encara sense cap carta jugada.
+      const firstTrickNoCards =
+        r.tricks.length === 1 && r.tricks[0].cards.length === 0;
       const isInitiative =
         r.envitState.kind === "none" &&
         r.trucState.kind === "none" &&
+        !r.envitResolved &&
         r.turn === player &&
-        r.tricks.length === 1;
+        firstTrickNoCards;
       if (r.trucState.kind === "pending") {
         r.deferredTruc = {
           level: r.trucState.level,
