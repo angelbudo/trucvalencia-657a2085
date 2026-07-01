@@ -163,7 +163,7 @@ function TableSurfaceComponent({ match, perspectiveSeat = 0, hiddenCardIds, hide
               key={`pile-${p}`}
               className={cn(
                 "absolute transition-transform duration-300 ease-out",
-                isLatestPlayer ? "z-[50]" : "z-10",
+                isWinner ? "z-[60]" : isLatestPlayer ? "z-[50]" : "z-10",
               )}
               style={{
                 left: pos.x,
