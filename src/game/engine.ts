@@ -895,12 +895,19 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
       break;
     }
     case "envit": {
-      // Iniciativa = el jugador podia tirar carta i en lloc d'això envida
-      // en el seu propi torn, sense cap truc ni envit pendents.
+      // Iniciativa estricta: el jugador podia tirar carta en la primera
+      // baza i en lloc d'això envida en el seu propi torn net, sense cap
+      // envit ni truc pendents ni resolts prèviament, i encara no s'ha
+      // jugat cap carta de la primera baza (per garantir que és el seu
+      // torn "de cartes" i no una resposta encoberta).
+      const firstTrickNoCards =
+        r.tricks.length === 1 && r.tricks[0].cards.length === 0;
       const isInitiative =
         r.trucState.kind === "none" &&
+        r.envitState.kind === "none" &&
+        !r.envitResolved &&
         r.turn === player &&
-        r.tricks.length === 1;
+        firstTrickNoCards;
       if (r.trucState.kind === "pending") {
         r.deferredTruc = {
           level: r.trucState.level,
@@ -911,7 +918,8 @@ function doShout(m: MatchState, player: PlayerId, what: ShoutKind): MatchState {
       }
       r.envitState = { kind: "pending", level: 2, calledBy: player, awaitingTeam: teamOf(player) === "nos" ? "ells" : "nos", prevAcceptedLevel: 0 };
       r.turn = nextRespondent(player);
-      // "Envit i truca": només si és iniciativa del primer de la pareja.
+      // "Envit i truca": només si és iniciativa neta del primer de la pareja
+      // en la primera baza. Mai en respostes ni renvits.
       if (isInitiative && isFirstOfPair(player)) {
         r.chainedTrucPending = player;
       }
