@@ -590,6 +590,14 @@ export function TrucBoard(props: TrucBoardProps) {
               }
             });
           }
+        } else {
+          // Qualsevol altre crit (envit, renvit, falta-envit, truc, retruc,
+          // cama, hi soc, etc.): l'iniciador ha mantingut l'? fins ara.
+          // El netegem exactament quan apareix el seu bocadillo central.
+          if (next[f.player]) {
+            next[f.player] = false;
+            changed = true;
+          }
         }
       }
       return changed ? next : prev;
