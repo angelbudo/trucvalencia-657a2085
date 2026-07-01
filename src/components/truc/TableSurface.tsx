@@ -163,7 +163,7 @@ function TableSurfaceComponent({ match, perspectiveSeat = 0, hiddenCardIds, hide
               key={`pile-${p}`}
               className={cn(
                 "absolute transition-transform duration-300 ease-out",
-                isLatestPlayer ? "z-[50]" : "z-10",
+                isWinner ? "z-[60]" : isLatestPlayer ? "z-[50]" : "z-10",
               )}
               style={{
                 left: pos.x,
@@ -238,8 +238,8 @@ function TableSurfaceComponent({ match, perspectiveSeat = 0, hiddenCardIds, hide
                       data-collect-player={p}
                       data-collect-kind="played"
                       data-collect-rot={pos.rot}
-                      className={cn("relative", isNew && "animate-play", isWinner && "z-20")}
-                      style={{ zIndex: 10, ...(playStyle ?? {}) }}
+                      className={cn("relative", isNew && "animate-play", isWinner && "z-[70]")}
+                      style={{ zIndex: isWinner ? 70 : 10, ...(playStyle ?? {}) }}
                     >
                       <PlayingCard
                         suit={currentTC.covered ? undefined : currentTC.card.suit}
@@ -249,7 +249,7 @@ function TableSurfaceComponent({ match, perspectiveSeat = 0, hiddenCardIds, hide
                         tone="white"
                       />
                       {isWinner && (
-                        <div className="absolute -inset-1 rounded-card border-2 border-primary animate-pulse-gold pointer-events-none" />
+                        <div className="absolute -inset-1 rounded-card border-2 border-primary animate-pulse-gold pointer-events-none z-[80]" />
                       )}
                     </div>
                   );
