@@ -622,6 +622,10 @@ function resolveTrick(m: MatchState) {
     if (!decided) {
       r.tricks.push({ cards: [] });
       r.turn = nextStarter;
+      // Safety net: qualsevol obligació encadenada de truc pertany
+      // estrictament a la primera baza. En passar a la segona (o
+      // posterior) es reseteja sempre.
+      if (r.tricks.length >= 2) r.chainedTrucPending = undefined;
     }
   }
 }
