@@ -63,6 +63,11 @@ export function PlayerSeat({
   const isTurn = match.round.turn === player;
   const team = teamOf(player);
   const isMa = nextPlayer(match.dealer) === player;
+  const showTurnQuestion =
+    isTurn &&
+    (match.round.phase === "envit" || match.round.phase === "playing") &&
+    match.round.envitState.kind !== "pending" &&
+    match.round.trucState.kind !== "pending";
   // Icona "mà": al costat de l'avatar; el costat depèn de la posició visual
   // del seient per a que quede cap a l'interior de la mesa.
   const maIconSide: "left" | "right" = position === "right" ? "left" : "right";
@@ -123,12 +128,7 @@ export function PlayerSeat({
           title={t("friends.is_friend") || "Amic"}
         />
       )}
-      {(isPendingResponder || (
-        isTurn &&
-        match.round.phase === "playing" &&
-        match.round.envitState.kind !== "pending" &&
-        match.round.trucState.kind !== "pending"
-      )) && (
+      {(isPendingResponder || showTurnQuestion) && (
         <div
           className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md animate-bounce z-20"
           title={isPendingResponder ? "Pendent de respondre" : "El seu torn"}
