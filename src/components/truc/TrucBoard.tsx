@@ -469,6 +469,7 @@ export function TrucBoard(props: TrucBoardProps) {
     const trucPending: PlayerId[] = [];
 
     const prevEnvit = prevEnvitRef.current;
+    // Transicions de RESPOSTA (pending → resolt, o nova rebutjada)
     if (prevEnvit.kind === "pending" && r.envitState.kind !== "pending") {
       envitPending.push(...([0, 1, 2, 3] as PlayerId[]).filter((p) =>
         teamOf(p) === prevEnvit.awaitingTeam &&
@@ -483,6 +484,24 @@ export function TrucBoard(props: TrucBoardProps) {
           envitChanged = true;
         }
       }
+    }
+    // Transicions d'INICIATIVA (nou envit) o RENVIT (canvia calledBy).
+    // Mantenim l'? de l'iniciador fins que aparega el seu bocadillo central.
+    if (
+      prevEnvit.kind !== "pending" &&
+      r.envitState.kind === "pending" &&
+      typeof r.envitState.calledBy === "number"
+    ) {
+      envitPending.push(r.envitState.calledBy);
+      envitChanged = true;
+    } else if (
+      prevEnvit.kind === "pending" &&
+      r.envitState.kind === "pending" &&
+      typeof r.envitState.calledBy === "number" &&
+      r.envitState.calledBy !== prevEnvit.calledBy
+    ) {
+      envitPending.push(r.envitState.calledBy);
+      envitChanged = true;
     }
 
     const prevTruc = prevTrucRef.current;
@@ -501,6 +520,23 @@ export function TrucBoard(props: TrucBoardProps) {
         }
       }
     }
+    // Iniciativa / retruc: iniciador queda "held" fins veure el bocadillo.
+    if (
+      prevTruc.kind !== "pending" &&
+      r.trucState.kind === "pending" &&
+      typeof r.trucState.calledBy === "number"
+    ) {
+      trucPending.push(r.trucState.calledBy);
+      trucChanged = true;
+    } else if (
+      prevTruc.kind === "pending" &&
+      r.trucState.kind === "pending" &&
+      typeof r.trucState.calledBy === "number" &&
+      r.trucState.calledBy !== prevTruc.calledBy
+    ) {
+      trucPending.push(r.trucState.calledBy);
+      trucChanged = true;
+    }
 
     prevEnvitRef.current = r.envitState;
     prevTrucRef.current = r.trucState;
@@ -514,6 +550,7 @@ export function TrucBoard(props: TrucBoardProps) {
       });
     }
   }, [r.envitState, r.trucState]);
+
 
   useEffect(() => {
     const list = (shoutFlashes && shoutFlashes.length > 0)
