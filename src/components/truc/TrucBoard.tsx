@@ -462,7 +462,7 @@ export function TrucBoard(props: TrucBoardProps) {
     }
   }, [match.history.length, r.phase]);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     let envitChanged = false;
     let trucChanged = false;
     const envitPending: PlayerId[] = [];
@@ -475,6 +475,14 @@ export function TrucBoard(props: TrucBoardProps) {
         !(prevEnvit.rejectedBy ?? []).includes(p)
       ));
       envitChanged = true;
+    } else if (prevEnvit.kind === "pending" && r.envitState.kind === "pending") {
+      const prevRejected = new Set(prevEnvit.rejectedBy ?? []);
+      for (const p of r.envitState.rejectedBy ?? []) {
+        if (!prevRejected.has(p)) {
+          envitPending.push(p);
+          envitChanged = true;
+        }
+      }
     }
 
     const prevTruc = prevTrucRef.current;
@@ -484,6 +492,14 @@ export function TrucBoard(props: TrucBoardProps) {
         !(prevTruc.rejectedBy ?? []).includes(p)
       ));
       trucChanged = true;
+    } else if (prevTruc.kind === "pending" && r.trucState.kind === "pending") {
+      const prevRejected = new Set(prevTruc.rejectedBy ?? []);
+      for (const p of r.trucState.rejectedBy ?? []) {
+        if (!prevRejected.has(p)) {
+          trucPending.push(p);
+          trucChanged = true;
+        }
+      }
     }
 
     prevEnvitRef.current = r.envitState;
